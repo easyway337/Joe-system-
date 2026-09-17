@@ -1,0 +1,5 @@
+Dockerfile
+nginx.conf
+.dockerignore
+.git
+node_modules

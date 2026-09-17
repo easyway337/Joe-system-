@@ -1,0 +1,158 @@
+from flask import Flask, jsonify, request, g, render_template
+import sqlite3
+import os
+
+app = Flask(__name__)
+DATABASE = 'database.db'
+
+# 1. دالة للاتصال بقاعدة البيانات
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+        # السطر ده بيخلينا نقرأ البيانات كـ Dictionary بدل Tuples عشان تكون أسهل في الـ JSON
+        db.row_factory = sqlite3.Row 
+    return db
+
+# 2. قفل الاتصال بقاعدة البيانات بعد انتهاء الطلب
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+
+# 3. دالة لإنشاء الجداول وإدخال البيانات التجريبية (Dummy Data)
+def init_db():
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
+        
+        # إنشاء جدول العملاء (CRM)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS leads (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                client_name TEXT NOT NULL,
+                company_name TEXT NOT NULL,
+                phone TEXT,
+                status TEXT NOT NULL, -- حالات زي: جديد، جاري التفاوض، تم البيع، مرفوض
+                notes TEXT
+            )
+        ''')
+        
+        # إنشاء جدول المنتجات (ERP - المخازن)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS products (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                product_name TEXT NOT NULL,
+                category TEXT NOT NULL,
+                price REAL NOT NULL,
+                stock_quantity INTEGER NOT NULL,
+                min_stock_alert INTEGER NOT NULL -- الحد الأدنى للتنبيه بنقص المخزون
+            )
+        ''')
+        
+        # إنشاء جدول المبيعات (ERP - المبيعات)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS sales (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                lead_id INTEGER,
+                product_id INTEGER,
+                quantity INTEGER NOT NULL,
+                total_price REAL NOT NULL,
+                sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (lead_id) REFERENCES leads (id),
+                FOREIGN KEY (product_id) REFERENCES products (id)
+            )
+        ''')
+
+        # التحقق إذا كانت الجداول فارغة لإدخال البيانات التجريبية
+        cursor.execute('SELECT COUNT(*) FROM leads')
+        if cursor.fetchone()[0] == 0:
+            # إدخال عملاء تجريبيين
+            leads_data = [
+                ('أحمد محمود', 'مصنع النور للبلاستيك', '01012345678', 'جديد', 'مهتم بشراء ماكينات تغليف'),
+                ('سيد عبد الرحمن', 'شركة الأمل للمقاولات', '01112345678', 'جاري التفاوض', 'طلب عرض سعر للمعدات الثقيلة'),
+                ('محمد مصطفى', 'مؤسسة التوحيد التجارية', '01212345678', 'تم البيع', 'عميل مستديم'),
+                ('محمود علي', 'مصنع السلام للنسيج', '01512345678', 'مرفوض', 'السعر غير مناسب للعميل')
+            ]
+            cursor.executemany('INSERT INTO leads (client_name, company_name, phone, status, notes) VALUES (?, ?, ?, ?, ?)', leads_data)
+            
+            # إدخال منتجات تجريبية للمخزن
+            products_data = [
+                ('ماكينة تغليف حراري', 'معدات صناعية', 45000.0, 5, 2),
+                ('رول بلاستيك شفاف 50 متر', 'خامات تغليف', 1200.0, 150, 20),
+                ('كرتون مقوى (مقاس كبير)', 'خامات تغليف', 15.0, 5000, 1000),
+                ('ماكينة لحام أكياس', 'معدات صناعية', 8500.0, 12, 5)
+            ]
+            cursor.executemany('INSERT INTO products (product_name, category, price, stock_quantity, min_stock_alert) VALUES (?, ?, ?, ?, ?)', products_data)
+            
+            # إدخال عمليات بيع تجريبية
+            sales_data = [
+                (3, 1, 2, 90000.0), # العميل رقم 3 اشترى 2 ماكينة تغليف
+                (3, 2, 50, 60000.0) # العميل رقم 3 اشترى 50 رول بلاستيك
+            ]
+            cursor.executemany('INSERT INTO sales (lead_id, product_id, quantity, total_price) VALUES (?, ?, ?, ?)', sales_data)
+            
+            db.commit()
+            print("تم إنشاء قاعدة البيانات وإضافة البيانات التجريبية بنجاح! ✅")
+
+# 4. الـ Routes (المسارات) الخاصة بصفحات الـ HTML
+@app.route('/')
+def dashboard():
+    # مؤقتاً هنرجع رسالة لحد ما نبني صفحة الـ HTML في المرحلة التانية
+    return "مرحباً بك في لوحة تحكم النظام الشامل (CRM & ERP) 🚀"
+
+# ==========================================
+# 5. الـ APIs (Endpoints) للتواصل مع الـ Frontend
+# ==========================================
+
+# API لجلب كل العملاء (CRM)
+@app.route('/api/leads', methods=['GET'])
+def get_leads():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('SELECT * FROM leads ORDER BY id DESC')
+    leads = [dict(row) for row in cursor.fetchall()]
+    return jsonify(leads)
+
+# API لجلب كل المنتجات والمخزون (ERP)
+@app.route('/api/products', methods=['GET'])
+def get_products():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('SELECT * FROM products ORDER BY id DESC')
+    products = [dict(row) for row in cursor.fetchall()]
+    return jsonify(products)
+
+# API لجلب إحصائيات لوحة التحكم (للرسم البياني والـ KPI Cards)
+@app.route('/api/dashboard-stats', methods=['GET'])
+def get_dashboard_stats():
+    db = get_db()
+    cursor = db.cursor()
+    
+    # إجمالي المبيعات
+    cursor.execute('SELECT SUM(total_price) FROM sales')
+    total_revenue = cursor.fetchone()[0] or 0
+    
+    # عدد العملاء المحتملين
+    cursor.execute('SELECT COUNT(*) FROM leads')
+    total_leads = cursor.fetchone()[0] or 0
+    
+    # المنتجات التي أوشكت على النفاذ (Low Stock)
+    cursor.execute('SELECT COUNT(*) FROM products WHERE stock_quantity <= min_stock_alert')
+    low_stock_items = cursor.fetchone()[0] or 0
+    
+    return jsonify({
+        'total_revenue': total_revenue,
+        'total_leads': total_leads,
+        'low_stock_items': low_stock_items
+    })
+
+# تشغيل السيرفر وإنشاء قاعدة البيانات لأول مرة
+if __name__ == '__main__':
+    # تأكد إننا بنكريت الداتا بيز قبل ما السيرفر يشتغل
+    if not os.path.exists(DATABASE):
+        init_db()
+    
+    # تشغيل التطبيق (debug=True عشان أي تعديل يظهر فوراً بدون ريستارت)
+    app.run(host='0.0.0.0', port=5000, debug=True)

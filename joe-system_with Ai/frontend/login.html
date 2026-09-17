@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexus — Log in</title>
+
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/crm.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+
+  <script src="js/supabase-config.js"></script>
+</head>
+<body>
+
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <span class="auth-brand-mark">N</span>
+        <span class="auth-brand-name">Nexus</span>
+      </div>
+
+      <h1>Welcome back</h1>
+      <p class="auth-sub">Log in to your CRM &amp; ERP workspace.</p>
+
+      <div class="auth-message" id="auth-message"></div>
+
+      <form class="auth-form" id="login-form">
+        <div class="form-field">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" name="email" required autocomplete="email" />
+        </div>
+        <div class="form-field">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" name="password" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn-primary auth-submit" id="login-submit">Log in</button>
+      </form>
+
+      <p class="auth-footer">Don't have an account? <a href="register.html">Create one</a></p>
+    </div>
+  </div>
+
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>

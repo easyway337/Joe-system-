@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexus — CRM</title>
+
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/ai_widget.css" />
+  <link rel="stylesheet" href="css/crm.css" />
+
+  <script src="js/supabase-config.js"></script>
+  <script src="js/config.js"></script>
+</head>
+<body>
+
+  <div class="app-shell">
+    <div id="sidebar-slot"></div>
+
+    <div class="main-column">
+      <div id="header-slot"></div>
+
+      <main class="main-content">
+        <div class="page-header">
+          <h1>CRM</h1>
+          <p>Leads, accounts, and your sales pipeline — backed by Supabase</p>
+        </div>
+
+        <div class="crm-toolbar">
+          <div class="crm-tabs" role="tablist">
+            <button class="crm-tab" data-tab="leads" role="tab">Leads</button>
+            <button class="crm-tab" data-tab="accounts" role="tab">Accounts</button>
+            <button class="crm-tab" data-tab="pipeline" role="tab">Pipeline</button>
+          </div>
+          <div id="crm-toolbar-actions"></div>
+        </div>
+
+        <!-- ---------------- Leads panel ---------------- -->
+        <section class="crm-panel card" id="panel-leads" data-panel="leads">
+          <div class="card__header">
+            <h2>Leads</h2>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Company</th>
+                  <th>Email</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="leads-tbody">
+                <tr><td colspan="6" class="empty-state">Loading leads…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ---------------- Accounts panel ---------------- -->
+        <section class="crm-panel card" id="panel-accounts" data-panel="accounts">
+          <div class="card__header">
+            <h2>Accounts</h2>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Industry</th>
+                  <th>Owner</th>
+                  <th>Website</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="accounts-tbody">
+                <tr><td colspan="5" class="empty-state">Loading accounts…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ---------------- Pipeline panel ---------------- -->
+        <section class="crm-panel" id="panel-pipeline" data-panel="pipeline">
+          <div class="pipeline-board" id="pipeline-board">
+            <div class="empty-state">Loading pipeline…</div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="ai-widget-slot"></div>
+
+  <!-- ---------------- Add Lead modal ---------------- -->
+  <div class="modal-overlay" id="lead-modal-overlay">
+    <form class="modal" id="lead-form">
+      <h3>Create a new lead</h3>
+      <p class="modal-sub">Also reachable by saying "Create a new lead" to Ava.</p>
+      <div class="form-field">
+        <label for="lead-name">Name</label>
+        <input type="text" id="lead-name" name="name" required />
+      </div>
+      <div class="form-field">
+        <label for="lead-company">Company</label>
+        <input type="text" id="lead-company" name="company" />
+      </div>
+      <div class="form-field">
+        <label for="lead-email">Email</label>
+        <input type="email" id="lead-email" name="email" />
+      </div>
+      <div class="form-field">
+        <label for="lead-phone">Phone</label>
+        <input type="tel" id="lead-phone" name="phone" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" data-close-modal="lead-modal-overlay">Cancel</button>
+        <button type="submit" class="btn-primary">Save lead</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ---------------- Add Account modal ---------------- -->
+  <div class="modal-overlay" id="account-modal-overlay">
+    <form class="modal" id="account-form">
+      <h3>Create a new account</h3>
+      <div class="form-field">
+        <label for="account-name">Name</label>
+        <input type="text" id="account-name" name="name" required />
+      </div>
+      <div class="form-field">
+        <label for="account-industry">Industry</label>
+        <input type="text" id="account-industry" name="industry" />
+      </div>
+      <div class="form-field">
+        <label for="account-owner">Owner</label>
+        <input type="text" id="account-owner" name="owner" />
+      </div>
+      <div class="form-field">
+        <label for="account-website">Website</label>
+        <input type="text" id="account-website" name="website" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" data-close-modal="account-modal-overlay">Cancel</button>
+        <button type="submit" class="btn-primary">Save account</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ---------------- Add Deal modal ---------------- -->
+  <div class="modal-overlay" id="deal-modal-overlay">
+    <form class="modal" id="deal-form">
+      <h3>Create a new deal</h3>
+      <div class="form-field">
+        <label for="deal-client">Client name</label>
+        <input type="text" id="deal-client" name="client_name" required />
+      </div>
+      <div class="form-field">
+        <label for="deal-value">Value ($)</label>
+        <input type="number" id="deal-value" name="value" min="0" step="100" />
+      </div>
+      <div class="form-field">
+        <label for="deal-probability">Probability (%)</label>
+        <input type="number" id="deal-probability" name="probability" min="0" max="100" />
+      </div>
+      <div class="form-field">
+        <label for="deal-owner">Owner</label>
+        <input type="text" id="deal-owner" name="owner" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" data-close-modal="deal-modal-overlay">Cancel</button>
+        <button type="submit" class="btn-primary">Save deal</button>
+      </div>
+    </form>
+  </div>
+
+  <script type="module" src="js/crm.js"></script>
+</body>
+</html>

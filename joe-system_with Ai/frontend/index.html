@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexus — CRM &amp; ERP</title>
+
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/ai_widget.css" />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/config.js"></script>
+</head>
+<body>
+
+  <div class="app-shell">
+    <!-- Sidebar is injected here by app.js from components/sidebar.html -->
+    <div id="sidebar-slot"></div>
+
+    <div class="main-column">
+      <!-- Topbar is injected here by app.js from components/header.html -->
+      <div id="header-slot"></div>
+
+      <main class="main-content">
+        <div class="page-header">
+          <h1>Inventory &amp; Sales Overview</h1>
+          <p>A comprehensive SaaS admin dashboard</p>
+        </div>
+
+        <!-- Charts -->
+        <section class="charts-row">
+          <div class="card">
+            <div class="card__header">
+              <h2>Monthly Sales &amp; Forecast</h2>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="sales-chart"></canvas>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__header">
+              <h2>Inventory Turnover</h2>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="turnover-chart"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- KPI summary cards -->
+        <section class="kpi-row">
+          <div class="card kpi-card">
+            <div class="kpi-card__icon">$</div>
+            <div>
+              <div class="kpi-card__label">Total Revenue</div>
+              <div class="kpi-card__value" id="kpi-revenue">—</div>
+            </div>
+          </div>
+          <div class="card kpi-card">
+            <div class="kpi-card__icon">◎</div>
+            <div>
+              <div class="kpi-card__label">New Orders</div>
+              <div class="kpi-card__value" id="kpi-orders">—</div>
+            </div>
+          </div>
+          <div class="card kpi-card">
+            <div class="kpi-card__icon">▤</div>
+            <div>
+              <div class="kpi-card__label">Stock Value</div>
+              <div class="kpi-card__value" id="kpi-stock">—</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Active Opportunities table injected from components/crm_table.html -->
+        <div id="opportunities-slot" style="margin-top:18px;"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- AI widget is injected here by app.js from components/ai_widget.html -->
+  <div id="ai-widget-slot"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+name: CI/CD
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  # ---------------------------------------------------------------------
+  # Runs on every push AND every PR — cheap, fast sanity checks before
+  # anything gets built into an image.
+  # ---------------------------------------------------------------------
+  lint-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Backend import sanity check
+        working-directory: backend
+        run: |
+          python -c "
+          from main import app
+          paths = list(app.openapi()['paths'].keys())
+          assert '/api/health' in paths, 'health check route missing'
+          assert '/api/crm/leads' in paths, 'CRM routes missing'
+          assert '/api/erp/inventory' in paths, 'ERP routes missing'
+          print(f'{len(paths)} routes registered OK')
+          "
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Frontend JS syntax check
+        run: |
+          for f in frontend/js/*.js; do
+            echo "Checking $f"
+            node --check "$f"
+          done
+
+  # ---------------------------------------------------------------------
+  # Only runs on pushes to main (not PRs), and only if the checks above
+  # passed. Builds both images and pushes them to GitHub Container Registry
+  # — free for public repos, and included in GitHub's free tier for private
+  # ones too within generous storage/bandwidth limits.
+  # ---------------------------------------------------------------------
+  build-and-push:
+    needs: lint-and-check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}-backend:latest
+            ghcr.io/${{ github.repository }}-backend:${{ github.sha }}
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}-frontend:latest
+            ghcr.io/${{ github.repository }}-frontend:${{ github.sha }}
+
+  # ---------------------------------------------------------------------
+  # OPTIONAL — pick ONE of these (or write your own) depending on where you
+  # host, then uncomment it. See README "Deployment plan" for the tradeoffs.
+  # Both need repo Secrets added under Settings -> Secrets and variables ->
+  # Actions before they'll work.
+  # ---------------------------------------------------------------------
+
+  # deploy-render:
+  #   needs: build-and-push
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Trigger Render deploy hook
+  #       run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+
+  # deploy-vps:
+  #   needs: build-and-push
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: SSH in and redeploy via docker compose
+  #       uses: appleboy/ssh-action@v1
+  #       with:
+  #         host: ${{ secrets.VPS_HOST }}
+  #         username: ${{ secrets.VPS_USER }}
+  #         key: ${{ secrets.VPS_SSH_KEY }}
+  #         script: |
+  #           cd /opt/joe-system
+  #           git pull
+  #           docker compose pull
+  #           docker compose up -d --remove-orphans

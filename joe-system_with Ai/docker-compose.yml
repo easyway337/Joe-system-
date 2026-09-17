@@ -1,0 +1,46 @@
+# Joe System (Nexus) — local/production orchestration.
+#
+# Quick start:
+#   1. cp backend/.env.example backend/.env   and fill in your real values.
+#   2. Fill in the real values in frontend/js/supabase-config.js.
+#   3. docker compose up --build
+#   4. Open http://localhost  (nginx serves the frontend AND proxies /api
+#      to the backend container — one origin, no CORS headaches).
+
+services:
+  backend:
+    build: ./backend
+    container_name: nexus-backend
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - nexus-net
+    # Not published to the host on purpose — only nginx (the "frontend"
+    # service) needs to reach it, over the internal "nexus-net" network, as
+    # "http://backend:8000". Uncomment below only if you want to hit the API
+    # directly (e.g. Swagger docs at :8000/docs) while developing locally.
+    # ports:
+    #   - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: nexus-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    networks:
+      - nexus-net
+
+networks:
+  nexus-net:
+    driver: bridge

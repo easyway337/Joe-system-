@@ -1,0 +1,32 @@
+<!-- ===================== AI Voice Widget: Nexus Ava ===================== -->
+<div class="ai-widget" id="ai-widget">
+  <div class="ai-widget__header">
+    <div class="ai-widget__title">
+      <span class="ai-widget__title-dot"></span>
+      Nexus Ava
+    </div>
+    <button class="ai-widget__close" id="ai-widget-close" aria-label="Close assistant">✕</button>
+  </div>
+
+  <div class="ai-widget__body">
+    <button class="ai-widget__mic" id="ai-widget-mic" aria-label="Toggle voice input">
+      <span class="ai-widget__mic-icon">🎙</span>
+    </button>
+
+    <div class="ai-widget__wave" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="ai-widget__status" id="ai-widget-status">Tap the mic to talk to Ava</div>
+    <div class="ai-widget__hint" id="ai-widget-hint">Try saying "Show me top leads this month"</div>
+
+    <div class="ai-widget__quick-actions">
+      <button class="ai-widget__quick-action" data-command="Create a new Lead">Create a new Lead</button>
+      <button class="ai-widget__quick-action" data-command="Check Inventory Status">Check Inventory Status</button>
+    </div>
+  </div>
+</div>
+
+<!-- Collapsed launcher (shown when the widget is closed) -->
+<button class="ai-launcher is-hidden" id="ai-launcher" aria-label="Open Nexus Ava">🎙</button>

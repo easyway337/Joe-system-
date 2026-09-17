@@ -1,0 +1,84 @@
+/* ==========================================================
+   erp.css — Inventory / Orders / Procurement / Reports
+   (reuses .crm-tab / .modal / .btn-primary / .form-field from crm.css)
+   ========================================================== */
+
+.stock-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stock-badge--ok { background: var(--badge-qualified-bg); color: var(--badge-qualified-text); }
+.stock-badge--low { background: var(--badge-lost-bg); color: var(--badge-lost-text); }
+
+.status-select {
+  font-size: 12.5px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  background: #FFFFFF;
+  color: var(--text-primary);
+}
+
+/* ---------- Line items inside Order / Purchase Order modals ---------- */
+.line-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.line-item-row {
+  display: grid;
+  grid-template-columns: 2fr 70px 90px auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.line-item-row select,
+.line-item-row input {
+  padding: 7px 8px;
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-family: inherit;
+}
+
+.line-item-remove {
+  background: none;
+  border: none;
+  color: var(--badge-lost-text);
+  font-size: 15px;
+  padding: 4px;
+}
+
+.line-item-add {
+  align-self: flex-start;
+  background: none;
+  border: 1px dashed var(--card-border);
+  color: var(--indigo-accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+}
+
+.report-summary {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.report-summary .kpi-card {
+  flex: 1;
+}
+
+/* Reuse pipeline-style modal width but a bit wider for line items */
+#order-modal-overlay .modal,
+#po-modal-overlay .modal {
+  max-width: 500px;
+}
